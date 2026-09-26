@@ -23,11 +23,8 @@ import {
  * as three real devices have. Nothing is handed from one to another but the server, so every screen
  * here changes because another device wrote something.
  *
- * Which server is the run's business and not the spec's: `E2E_BACKEND=supabase` points the app at a
- * local Supabase stack, where the screens are told what changed, and `E2E_BACKEND=rest` points it at
- * the Symfony service in api/, where they ask every couple of seconds. The café is the same one
- * either way — supabase/seed.sql and `php bin/console app:seed-demo` create the same people with the
- * same passwords — and so is everything below.
+ * The server is the Symfony service in api/, holding the demo café `php bin/console app:seed-demo`
+ * puts in it, and a screen learns what another device changed by asking it every couple of seconds.
  *
  * The run makes its own table and terminal, named after the moment it started, so it needs no reset
  * and leaves the seeded café as it found it.

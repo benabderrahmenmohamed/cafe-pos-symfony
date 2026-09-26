@@ -436,7 +436,7 @@ type Access = 'anyone' | 'member' | 'table' | 'register' | 'kitchen' | 'admin';
 
 /** Who may call each port method: the check made by the database behind it. */
 const accessFor: Record<MemoryOperation, Access> = {
-  // Supabase Auth itself.
+  // Signing in, and asking who is signed in: anyone may.
   'auth.getState': 'anyone',
   'auth.signIn': 'anyone',
   'auth.signOut': 'anyone',
@@ -525,7 +525,7 @@ const outcomeUnder: Record<Access, Record<Caller, 'resolved' | ErrorCode>> = {
 };
 
 describe('default seed', () => {
-  it('mirrors supabase/seed.sql: two shops with their members, tables, categories and menu, and no terminal', () => {
+  it('mirrors the demo café the server seeds: two shops with their members, tables, categories and menu, and no terminal', () => {
     const { shops, accounts, profiles, tables, categories, products } = defaultSeed;
     expect(shops.map((shop) => [shop.id, shop.name, shop.settings.receiptFooter])).toEqual([
       [DEMO_SHOP_ID, 'Café des Nattes', 'Merci pour votre visite !'],

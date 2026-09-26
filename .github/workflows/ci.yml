@@ -4,7 +4,7 @@ on:
   push:
     branches: ['**']
   pull_request:
-  # The Supabase job is heavy, so it runs on pull requests to main; this runs it on any branch.
+  # To run it by hand on any branch: gh workflow run ci.yml --ref <branch>
   workflow_dispatch:
 
 permissions:
@@ -25,14 +25,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # --ignore-scripts: the only lifecycle script is the Supabase CLI download, and the jobs that
-      # need the CLI install it with setup-cli instead.
+      # --ignore-scripts: no dependency needs its install script to build or test (esbuild and
+      # Tailwind ship their binaries as optional dependencies; msw's copies a browser worker the tests
+      # do not use), so an install runs no third-party code.
       - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run typecheck
       # The whole Vitest suite, including the port contract suite on the memory and REST backends.
       - run: npm test
-      - name: build (memory demo, no Supabase variables)
+      - name: build (memory demo, no server settings)
         run: npm run build
         env:
           VITE_BACKEND: memory
@@ -120,6 +121,16 @@ jobs:
         run: |
           php bin/console doctrine:migrations:migrate --no-interaction
           php bin/console app:seed-demo --no-interaction
+      # The rules the money depends on are tested where they live, in SQL, against the café just
+      # seeded. pgTAP is packaged for the Postgres of the service container, so it is installed there;
+      # pg_prove, which runs the files, is a Perl tool installed here. Every file rolls back.
+      - name: the database's own tests (pgTAP)
+        run: |
+          docker exec ${{ job.services.postgres.id }} bash -c \
+            'apt-get update -qq && apt-get install -y -qq postgresql-17-pgtap > /dev/null'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libtap-parser-sourcehandler-pgtap-perl > /dev/null
+          PGPASSWORD=postgres pg_prove -h 127.0.0.1 -U postgres -d cafe api/tests/pgtap/*.test.sql
       # Its own database, created by the owner because the API's role may not create one, and filled
       # with the schema and the café by the test bootstrap itself.
       - name: the server's own tests
@@ -209,53 +220,3 @@ jobs:
           jq -e '.roles | index("admin")' "$RUNNER_TEMP/me.json"
       - if: always()
         run: docker compose --profile cafe down --volumes
-
-  supabase:
-    name: database, contract suite and the café on three devices, on local Supabase
-    runs-on: ubuntu-latest
-    needs: ci
-    timeout-minutes: 40
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.base_ref == 'main')
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - uses: supabase/setup-cli@v1
-        with:
-          # The version package.json pins, so the service names excluded below and the local stack
-          # are the ones this repo was written against.
-          version: 2.117.0
-      - run: npm ci --ignore-scripts
-      # Realtime stays in: the three-device spec waits for the kitchen and the counter to change
-      # because the waiter's phone wrote something, and nothing else tells them.
-      - name: start the local stack (applies migrations and seed)
-        run: supabase start -x storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
-      - name: database tests (pgTAP)
-        run: supabase test db
-      - name: export the stack's address and keys
-        run: |
-          eval "$(supabase status -o env --override-name api.url=SUPABASE_URL --override-name auth.anon_key=SUPABASE_ANON_KEY --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY)"
-          {
-            echo "SUPABASE_URL=$SUPABASE_URL"
-            echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY"
-          } >> "$GITHUB_ENV"
-      - name: port contract and security suites
-        run: npm run test:contract
-        env:
-          CONTRACT_BACKEND: supabase
-      - name: the café on three devices (Playwright)
-        run: npx playwright test --project=supabase
-        env:
-          E2E_BACKEND: supabase
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report-supabase
-          path: playwright-report
-          if-no-files-found: ignore
-          retention-days: 7
-      - if: always()
-        run: supabase stop --no-backup

@@ -8,15 +8,13 @@
 #   VITE_BACKEND=rest VITE_API_BASE_URL=http://localhost:8000 \
 #     docker compose --profile cafe up --build
 #
-# The demo café is seeded on first start, so the logins of supabase/seed.sql work straight away.
+# The demo café is seeded on first start, so the demo logins (README.md) work straight away.
 services:
   web:
     build:
       context: .
       args:
         VITE_BACKEND: ${VITE_BACKEND:-memory}
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
-        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     ports:
       - '127.0.0.1:8080:8080'

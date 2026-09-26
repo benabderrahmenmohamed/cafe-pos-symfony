@@ -6,7 +6,7 @@ import type { RealtimeListener, RealtimePort, RealtimeTopic } from '@/ports';
  *
  * Listeners are told which topic changed and nothing else — never the row — because the screens
  * re-read the queries a topic covers. A missed or repeated event then costs a refetch, never a
- * wrong screen, which is what lets the Supabase and REST adapters differ in what they deliver.
+ * wrong screen, which is what lets the memory and REST adapters differ in how they deliver it.
  */
 export interface MemoryRealtime {
   /** Tells the listeners of `shopId` that `topic` changed. Every port write of that shop calls it. */

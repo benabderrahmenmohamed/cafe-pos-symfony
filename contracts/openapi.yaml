@@ -4,8 +4,7 @@ info:
   version: 1.0.0
   summary: The backend contract for the register and back office.
   description: |
-    This is the contract the web app's REST adapter speaks and the Spring Boot service will implement.
-    The Supabase backend implements the same operations as RPCs with the same semantics.
+    This is the contract the web app's REST adapter speaks and the Symfony server in `api/` implements.
 
     - Money is always an integer number of millimes (1 TND = 1000 millimes) in fields ending in `_millimes`.
     - Records a device writes (order events, sales, refunds, session opens and closes) carry an id chosen by the device
@@ -17,8 +16,8 @@ info:
       table, so two devices adding to the same table never race on creating it.
     - Errors use one envelope and the codes in `contracts/errors.md`, including the order in which checks run.
 servers:
-  - url: http://localhost:8080
-    description: Local Spring Boot service
+  - url: http://127.0.0.1:8000
+    description: The Symfony server in api/, run locally with `php -S 127.0.0.1:8000 -t public`
 security:
   - bearerAuth: []
 tags:

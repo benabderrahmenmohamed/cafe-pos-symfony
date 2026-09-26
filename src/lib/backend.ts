@@ -17,10 +17,6 @@ export async function createBackend(): Promise<Backend> {
       const { createMemoryBackend } = await import('@/adapters/memory');
       return createMemoryBackend();
     }
-    case 'supabase': {
-      const { createSupabaseBackend } = await import('@/adapters/supabase');
-      return createSupabaseBackend();
-    }
     case 'rest': {
       const { createRestBackend } = await import('@/adapters/rest');
       return createRestBackend();

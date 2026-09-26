@@ -2,7 +2,7 @@
  * The café as the people in it drive it — the waiter's phone, the kitchen screen, the counter and the
  * back office. Every helper works a screen by its roles and the words on it, never a class name, so a
  * rewrite of the markup that keeps the app usable keeps the specs passing. Both specs use them: the
- * credential-free demo on one device, and three devices on a local Supabase stack.
+ * credential-free demo on one device, and three devices against the Symfony server.
  */
 import { expect, type Locator, type Page } from '@playwright/test';
 

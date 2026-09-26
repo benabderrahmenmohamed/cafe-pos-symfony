@@ -22,7 +22,7 @@ import {
 } from './records';
 
 // Black-box tests of the sale and refund records a terminal writes. `documentProblems` restates the
-// document rules of record_sale (supabase/migrations/20260911000006_sales_ledger.sql) and the check
+// document rules of record_sale (api/migrations/sql/0001_schema.sql) and the check
 // constraints of public.sales and public.sale_lines, so every record built here is one the server
 // accepts.
 

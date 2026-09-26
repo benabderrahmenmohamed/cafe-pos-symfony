@@ -33,8 +33,8 @@ export interface RestBackendOptions {
 }
 
 /**
- * The REST backend: the HTTP API of contracts/openapi.yaml behind every port, which the Spring Boot
- * service will serve. The wire is snake_case and the ports are camelCase, so every request goes out
+ * The REST backend: the HTTP API of contracts/openapi.yaml behind every port, which the Symfony
+ * server in api/ serves. The wire is snake_case and the ports are camelCase, so every request goes out
  * through `keysToSnake` and every answer comes back through `keysToCamel` and a port schema; the
  * bearer token of the signed-in member goes with each request, and the server decides everything
  * else.

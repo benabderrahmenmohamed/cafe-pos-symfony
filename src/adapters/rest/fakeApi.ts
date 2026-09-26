@@ -37,8 +37,8 @@ import type { StorageLike } from './session';
 import { HTTP_CREATED } from './writes';
 
 /*
- * A fake of contracts/openapi.yaml for tests, as MSW handlers. There is no Spring Boot service yet,
- * so this stands in for one: it answers the shapes and statuses of the OpenAPI file over the memory
+ * A fake of contracts/openapi.yaml for tests, as MSW handlers, so the REST adapter is tested with no
+ * server running: it answers the shapes and statuses of the OpenAPI file over the memory
  * backend, which is the reference implementation of every port (its ledger, its order of checks and
  * its errors are the ones contracts/errors.md describes). The handlers only translate — bearer
  * token to a signed-in client, snake_case to camelCase and back, AppError to the error envelope and

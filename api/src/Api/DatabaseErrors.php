@@ -36,7 +36,7 @@ final class DatabaseErrors
         // raises its own FORBIDDEN, but a category added or deleted is a plain statement whose only
         // guard is the policy on the table, and Postgres answers both cases with one state. Either
         // way what it means is the contract's FORBIDDEN: this role cannot do that. PostgREST turned
-        // 42501 into 403 as well, so the Supabase backend and this one refuse it alike.
+        // 42501 into 403 too, when the café ran on Supabase, so the answer is the one it always was.
         if ('42501' === $state) {
             return ApiError::forbidden('Your role cannot do this.');
         }

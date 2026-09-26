@@ -11,7 +11,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
-  # The only lifecycle script is the Supabase CLI download, which a static build never needs.
+  # No dependency needs its install script to build, so the install runs no third-party code.
   NPM_FLAGS = "--ignore-scripts"
   # The public demo is the credential-free in-browser backend, so no keys are configured here.
   VITE_BACKEND = "memory"

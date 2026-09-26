@@ -26,13 +26,13 @@ test-results
 .gitignore
 .github
 
-# Not read by a static build: the delivery files themselves, the database, the specs and the docs.
+# Not read by a static build: the delivery files themselves, the server, the specs and the docs.
 Dockerfile
 .dockerignore
 docker
 docker-compose.yml
 netlify.toml
-supabase
+api
 e2e
 docs
 contracts

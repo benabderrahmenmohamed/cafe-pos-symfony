@@ -5,7 +5,7 @@ import { zReportSchema, type PaymentMethod, type RecordKind, type ZReport } from
 import { computeZReport, sameZReport, type ZReportDocument } from './zReport';
 
 // Black-box tests of the local Z-report: it must give exactly what private.compute_z_report
-// (supabase/migrations/20260911000005_terminals_and_sessions.sql) gives for the same documents.
+// (api/migrations/sql/0001_schema.sql) gives for the same documents.
 
 const SESSION_ID = 'a3b1c2d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
 

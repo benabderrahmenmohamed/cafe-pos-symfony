@@ -150,8 +150,9 @@ function diningTable(
 }
 
 /**
- * The same shops, members, tables, categories and menu as supabase/seed.sql, so the credential-free
- * demo and the local stack show one café. Unlike seed.sql it registers no terminal: an admin
+ * The same shops, members, tables, categories and menu as the server's demo café
+ * (api/src/Demo/DemoSeeder.php), so the credential-free demo and the real one show one café. Unlike
+ * the server's it registers no terminal: an admin
  * registers this device in Settings before a cashier opens a session, and no table has an open
  * order until somebody adds the first item to it.
  */

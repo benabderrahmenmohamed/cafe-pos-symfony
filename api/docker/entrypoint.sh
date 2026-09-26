@@ -42,8 +42,8 @@ if [ "${MIGRATE_ON_START:-1}" = "1" ]; then
     done
 fi
 
-# The demo café: the people, the room and the menu of supabase/seed.sql. It is refused on a database
-# that already has a café, so starting this container again changes nothing.
+# The demo café - its people, its room and its menu, from App\Demo\DemoSeeder. It is refused on a
+# database that already has a café, so starting this container again changes nothing.
 if [ "${SEED_DEMO:-0}" = "1" ]; then
     php bin/console app:seed-demo --no-interaction
 fi

@@ -5,22 +5,20 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-# Lifecycle scripts are skipped: the only one is the Supabase CLI download, which a build never needs.
+# Lifecycle scripts are skipped: none is needed to build (esbuild and Tailwind ship their binaries as
+# optional dependencies, and msw's only copies a browser worker nothing here uses), so an install runs
+# no third-party code.
 RUN npm ci --ignore-scripts
 
 # .dockerignore keeps the host's node_modules and .env out: the first would replace the Linux
 # dependencies installed just above, and the second would put local values in a readable layer.
 COPY . .
 
-# Vite inlines these at build time. The default image is the credential-free memory demo.
-# VITE_API_BASE_URL is read only once VITE_BACKEND=rest is wired up; it is inert until then.
+# Vite inlines these at build time. The default image is the credential-free memory demo; with
+# VITE_BACKEND=rest it is the café, and VITE_API_BASE_URL says where the Symfony server is.
 ARG VITE_BACKEND=memory
-ARG VITE_SUPABASE_URL=
-ARG VITE_SUPABASE_ANON_KEY=
 ARG VITE_API_BASE_URL=
 ENV VITE_BACKEND=$VITE_BACKEND \
-    VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
-    VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY \
     VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN npm run build

@@ -13,21 +13,16 @@ const adapterImports = {
   message: BACKEND_MESSAGE,
 };
 
-const supabaseImports = {
-  group: ['@supabase/*', '@supabase/**'],
-  message: 'Supabase is an adapter detail: import it only under src/adapters/supabase.',
-};
-
 /** Backend settings are for the composition root and adapters. */
 const envImports = {
   name: '@/lib/env',
-  importNames: ['supabaseEnv'],
+  importNames: ['restEnv'],
   message: BACKEND_MESSAGE,
 };
 
 // no-restricted-imports only sees static imports: these catch import() and import.meta.glob.
 const dynamicBackendImports = [
-  { selector: 'ImportExpression[source.value=/adapters|@supabase/]', message: BACKEND_MESSAGE },
+  { selector: 'ImportExpression[source.value=/adapters/]', message: BACKEND_MESSAGE },
   {
     selector: "MemberExpression[object.type='MetaProperty'][property.name=/^glob/]",
     message: 'import.meta.glob can pull in an adapter: import modules by name.',
@@ -78,10 +73,7 @@ export default defineConfig([
     files: ['src/**/*.{ts,tsx}'],
     ignores: ['src/adapters/**', 'src/lib/backend.ts'],
     rules: {
-      'no-restricted-imports': [
-        'error',
-        { paths: [envImports], patterns: [adapterImports, supabaseImports] },
-      ],
+      'no-restricted-imports': ['error', { paths: [envImports], patterns: [adapterImports] }],
       'no-restricted-syntax': ['error', ...dynamicBackendImports],
     },
   },
@@ -100,16 +92,7 @@ export default defineConfig([
   {
     files: ['src/adapters/memory/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': [
-        'error',
-        { patterns: [supabaseImports, otherAdapters('supabase', 'rest')] },
-      ],
-    },
-  },
-  {
-    files: ['src/adapters/supabase/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': ['error', { patterns: [otherAdapters('memory', 'rest')] }],
+      'no-restricted-imports': ['error', { patterns: [otherAdapters('rest')] }],
     },
   },
   {
@@ -122,7 +105,6 @@ export default defineConfig([
           paths: [envImports],
           patterns: [
             adapterImports,
-            supabaseImports,
             {
               group: [
                 'react',

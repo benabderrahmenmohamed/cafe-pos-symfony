@@ -11,8 +11,8 @@ use Doctrine\DBAL\Connection;
  * a second shop that owns nothing but rows of its own — what the isolation tests read when they
  * check that one café never sees another's.
  *
- * The same ids, names and passwords as supabase/seed.sql, so the documents, the tests and the
- * screenshots keep meaning what they say. Passwords are hashed here rather than in SQL: hashing is
+ * Its ids, names and passwords are the ones the documents, the tests and the screenshots use, and the
+ * in-browser demo repeats (src/adapters/memory/seed.ts), so they keep meaning what they say. Passwords are hashed here rather than in SQL: hashing is
  * the application's job now, and Postgres has no business knowing how it is done.
  */
 final readonly class DemoSeeder

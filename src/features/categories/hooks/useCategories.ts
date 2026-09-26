@@ -16,11 +16,10 @@ export function useCreateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CategoryInput) => catalog.createCategory(input),
-    // Products can link to a new category too: the Supabase backend matches them by name. Not
-    // awaited: the save is done; the lists refresh in the background.
+    // A new category has no products yet - they link to it by id - so only its own list changes.
+    // Not awaited: the save is done; the list refreshes in the background.
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.products });
     },
   });
 }

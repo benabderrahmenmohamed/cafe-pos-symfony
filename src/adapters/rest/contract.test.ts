@@ -1,11 +1,12 @@
 /**
  * The port contract against the REST adapter, with MSW answering contracts/openapi.yaml.
  *
- * There is no Spring Boot service yet, so `createFakeApi` stands in for one: it serves the OpenAPI
+ * `createFakeApi` stands in for the server here, so nothing has to be started: it serves the OpenAPI
  * shapes and statuses over the memory backend's ledger (src/adapters/rest/fakeApi.ts). What this
  * proves is therefore the adapter and the wire format — the paths, the bearer token, snake_case out
  * and camelCase in, the port schemas, 201 against 200, and every error code read back from the
- * envelope — against the same suite the memory and Supabase backends pass unchanged.
+ * envelope — against the same suite the memory backend passes unchanged. live.contract.test.ts
+ * runs that suite against the real server.
  */
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, vi } from 'vitest';

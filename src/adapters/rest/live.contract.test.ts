@@ -4,7 +4,7 @@
  *
  * Runs only with CONTRACT_BACKEND=rest and is skipped otherwise. It reads API_BASE_URL, which is
  * http://127.0.0.1:8000 unless it is set, and signs in the demo accounts that `php bin/console
- * app:seed-demo` creates — the same people, with the same passwords, as supabase/seed.sql.
+ * app:seed-demo` creates.
  *
  * `contract.test.ts` next to this file runs the same suite against `createFakeApi`, which serves the
  * OpenAPI shapes over the memory backend. That one proves the adapter; this one proves a server. The

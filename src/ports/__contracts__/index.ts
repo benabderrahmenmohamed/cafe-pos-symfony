@@ -17,7 +17,7 @@ export { describeSessionsPortContract } from './sessions.contract';
 export { describeTerminalsPortContract } from './terminals.contract';
 
 /**
- * Every port contract against one backend. The database defines the semantics (supabase/migrations,
+ * Every port contract against one backend. The database defines the semantics (api/migrations,
  * contracts/errors.md); each adapter runs this suite and must pass it unchanged.
  */
 export function describeBackendContract(makeFixture: MakeFixture): void {

@@ -9,7 +9,7 @@ function testEnv(): TestEnv {
 }
 
 /** True when CONTRACT_BACKEND names `backend`: its runners then run next to the memory one. */
-export function contractBackendIs(backend: 'supabase' | 'rest'): boolean {
+export function contractBackendIs(backend: 'rest'): boolean {
   return testEnv().CONTRACT_BACKEND === backend;
 }
 

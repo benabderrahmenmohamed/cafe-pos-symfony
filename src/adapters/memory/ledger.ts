@@ -6,8 +6,8 @@ import type { MemoryStore, MemoryTerminal, SaleRow, SessionRow } from './store';
 
 /*
  * Checks and views shared by terminals, sessions and sales, each named after the database helper it
- * stands for. Details use the port's camelCase keys, which is what the Supabase adapter produces
- * from the database's snake_case ones.
+ * stands for. Details use the port's camelCase keys, which is what the REST adapter produces
+ * from the server's snake_case ones.
  */
 
 /**

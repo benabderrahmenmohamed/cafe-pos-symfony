@@ -1,21 +1,22 @@
 import { AppError } from './errors';
 
-export type BackendKind = 'memory' | 'supabase' | 'rest';
+/**
+ * `rest` is the café: the Symfony server in api/. `memory` is a backend that lives in the browser tab,
+ * for the credential-free demo and the tests; it stores nothing anywhere else.
+ */
+export type BackendKind = 'memory' | 'rest';
 
-const BACKEND_KINDS: readonly string[] = ['memory', 'supabase', 'rest'];
+const BACKEND_KINDS: readonly string[] = ['memory', 'rest'];
 
 function isBackendKind(value: string): value is BackendKind {
   return BACKEND_KINDS.includes(value);
 }
 
-/** The adapter the composition root builds, from VITE_BACKEND (default: supabase). */
+/** The adapter the composition root builds, from VITE_BACKEND (default: rest). */
 export function backendKind(): BackendKind {
-  const value = import.meta.env.VITE_BACKEND ?? 'supabase';
+  const value = import.meta.env.VITE_BACKEND ?? 'rest';
   if (!isBackendKind(value)) {
-    throw new AppError(
-      'CONFIG_ERROR',
-      `VITE_BACKEND must be memory, supabase or rest; got "${value}".`,
-    );
+    throw new AppError('CONFIG_ERROR', `VITE_BACKEND must be rest or memory; got "${value}".`);
   }
   return value;
 }
@@ -30,16 +31,9 @@ function required(name: string, value: string | undefined): string {
   return value;
 }
 
-export function supabaseEnv(): { url: string; anonKey: string } {
-  return {
-    url: required('VITE_SUPABASE_URL', import.meta.env.VITE_SUPABASE_URL).replace(/\/+$/, ''),
-    anonKey: required('VITE_SUPABASE_ANON_KEY', import.meta.env.VITE_SUPABASE_ANON_KEY),
-  };
-}
-
 /**
  * Where the REST API lives, without the `/api/v1` prefix the adapter adds: an absolute origin, e.g.
- * `http://localhost:8080`, since the app has no page to resolve a relative one against.
+ * `http://127.0.0.1:8000`, since the app has no page to resolve a relative one against.
  */
 export function restEnv(): { baseUrl: string } {
   return {

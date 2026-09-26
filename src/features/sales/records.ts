@@ -38,7 +38,7 @@ export function receiptNumber(terminalCode: string, seq: number): string {
  * The device names its own rows, as it names the record, because a refund can be written before the
  * sale it gives back has reached a server — a register that sold offline and is refunding the same
  * receipt — and the line it points at has to have an id by then. `record_sale` stores what it was
- * given (supabase/migrations).
+ * given (api/migrations/sql/0001_schema.sql).
  *
  * Derived rather than random so that the same sale, built twice, is the same record down to its
  * hash: two records could then never be stored under one id with different contents.
