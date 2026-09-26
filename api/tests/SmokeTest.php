@@ -17,6 +17,12 @@ final class SmokeTest extends KernelTestCase
         $connection = self::getContainer()->get(Connection::class);
 
         self::assertSame(1, (int) $connection->fetchOne('select 1'));
-        self::assertSame('cafe_test', $connection->fetchOne('select current_database()'));
+        // Whatever the database is called on this machine, the tests write to one of their own:
+        // doctrine.yaml adds `_test` to its name in the test environment, and nothing else does.
+        self::assertStringEndsWith(
+            '_test',
+            (string) $connection->fetchOne('select current_database()'),
+            'the tests must never run against the database a café uses',
+        );
     }
 }

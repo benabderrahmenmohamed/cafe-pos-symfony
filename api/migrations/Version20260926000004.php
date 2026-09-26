@@ -9,11 +9,11 @@ use Doctrine\Migrations\AbstractMigration;
 use RuntimeException;
 
 /**
- * Supabase migration 20260926000017, for this server: see migrations/sql/0004_malformed_payloads.sql.
+ * Three malformed payloads answered VALIDATION_ERROR: see migrations/sql/0004_malformed_payloads.sql.
  *
  * Its own migration rather than more lines in 0001_schema.sql, because every database this server has
- * ever had has already run Version20260925000001 and will never run it again. This is how the same
- * fix reaches them: as the next migration, once, exactly as Supabase applies file 17.
+ * ever had has already run Version20260925000001 and will never run it again. This is how the fix
+ * reaches them: as the next migration, once.
  */
 final class Version20260926000004 extends AbstractMigration
 {

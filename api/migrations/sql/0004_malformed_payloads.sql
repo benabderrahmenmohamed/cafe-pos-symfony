@@ -1,9 +1,7 @@
--- 20260926000017_malformed_payloads.sql, for the Symfony server.
---
--- Converted by build_from_supabase.py exactly as 0001_schema.sql was: auth.users is public.users,
--- auth.uid() is private.current_user_id(), and the API roles are cafe_app. A migration of its own
--- rather than more lines in 0001_schema.sql, because Doctrine has already run that one everywhere
--- and a database that has will never run it again.
+-- Three malformed payloads that were answered SERVER_ERROR, and are VALIDATION_ERROR naming the field
+-- or the line. Written first as Supabase migration 20260926000017 and converted the way
+-- 0001_schema.sql was; a migration of its own rather than more lines in 0001_schema.sql, because
+-- Doctrine has already run that one everywhere and a database that has will never run it again.
 
 -- ---------------------------------------------------------------------------------------------
 -- from 20260926000017_malformed_payloads.sql

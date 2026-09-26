@@ -63,20 +63,23 @@ an identity and never by anything else a request carries; everything the request
 
 ## Where the schema comes from
 
-`migrations/sql/0001_schema.sql` is the café's schema as this server started from it: the 16
-Supabase migrations of that day in one file, derived by `migrations/sql/build_from_supabase.py`,
-which replays them in order and changes three things: `auth.users` becomes `public.users`,
-`auth.uid()` becomes `private.current_user_id()` reading `app.user_id`, and Supabase's three API
-roles become the single `cafe_app`. The key-value import of the old app, the nightly demo reset and
-the Realtime publication are left behind.
+The schema is the migrations in `migrations/`, each a Doctrine class that runs one SQL file in
+`migrations/sql/`. They are the source: nothing generates them, and a change to the schema is the
+next one.
 
-That file is history and is never added to. Doctrine has run it on every database this server has
-had and will not run it again, so a statement appended to it reaches a fresh database and no other.
-A Supabase migration written since becomes a file of its own, converted by the same script, with a
-Doctrine migration that runs it once: `0004_malformed_payloads.sql` is Supabase's migration 17, and
-`Version20260926000004` is how an existing database gets it. To add the next one, put it in the
-script's `LATER` list, run the script, and add its Doctrine migration and its line in
-`tests/Support/CafeSchema.php`.
+`0001_schema.sql` is where it started. The café ran on Supabase first, and that file is its sixteen
+migrations of the day converted once, with three substitutions: `auth.users` became `public.users`,
+`auth.uid()` became `private.current_user_id()` reading `app.user_id`, and Supabase's three API roles
+became the single `cafe_app`. The key-value import of the old app, the nightly demo reset and the
+Realtime publication were left behind. The originals, and the script that converted them, are in the
+history of the `pos-admin-dashboard` repository.
+
+That file is history. Doctrine has run it on every database this server has had and will never run
+it again, so a statement added to it would reach a fresh database and no other — which is why the
+last fix written for Supabase, `0004_malformed_payloads.sql`, is a migration of its own. To change the
+schema, add the next `migrations/sql/000N_*.sql`, a `VersionYYYYMMDDNNNNNN` class that runs it, and its
+line in `tests/Support/CafeSchema.php`; if the change is to a rule, add a pgTAP test for it in
+`tests/pgtap/`.
 
 Two migrations are this server's own. `0002_changes.sql` is the one thing Supabase provided that a
 PHP server cannot — see below — and `0003_reads.sql` is a single grant, so that the sessions this

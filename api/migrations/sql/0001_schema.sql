@@ -1,7 +1,8 @@
 -- The café's schema, for the Symfony server.
 --
--- Derived from supabase/migrations, replayed in order, with the three things that were Supabase's
--- and are now ours:
+-- The café ran on Supabase first. This file is its sixteen migrations of that day, converted once,
+-- with the three things that were Supabase's made this server's (the originals, and the script that
+-- converted them, are in the history of the pos-admin-dashboard repository):
 --
 --   auth.users   -> public.users, written by this server (Symfony hashes the passwords)
 --   auth.uid()   -> private.current_user_id(), read from `app.user_id`, which the API sets on the
@@ -11,6 +12,9 @@
 -- What was left behind: the key-value import of the old app, the nightly demo reset, and the
 -- Supabase Realtime publication. Row-level security stays exactly as it was: cafe_app reads only its
 -- own shop's rows, and the ledger takes writes through its functions alone.
+--
+-- Doctrine has run this file on every database this server has had and will not run it again, so
+-- nothing is ever added to it or changed in it: a change to the schema is the next migration.
 
 create extension if not exists pgcrypto;
 
