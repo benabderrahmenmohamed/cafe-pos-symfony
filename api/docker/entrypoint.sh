@@ -20,7 +20,7 @@ for name in APP_ENV APP_SECRET DATABASE_URL DATABASE_ADMIN_URL JWT_SECRET_KEY JW
 done
 
 # The keys that sign the tokens. A deployment mounts its own at config/jwt; keys made here live and
-# die with the container, so every restart signs every device out and two replicas reject each
+# die with the container, so every new container signs every device out and two replicas reject each
 # other's tokens. Fine for a demo, and said plainly in api/README.md for anything else.
 if [ ! -f config/jwt/private.pem ]; then
     echo "No keypair is mounted. Making one that lasts as long as this container."

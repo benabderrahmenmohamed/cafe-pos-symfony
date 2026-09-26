@@ -25,7 +25,7 @@ src/features/<feature>/
   types.ts      the port types this feature uses
   *.ts          the feature's rules: plain modules, no React
 src/ports/      the interfaces the UI may call (ADR 0003)
-src/adapters/   the implementations: memory, supabase, rest
+src/adapters/   the implementations: memory, rest
 src/lib/        cross-feature helpers: money, errors, payloadHash, env, query, backend
 src/routes/     appRoutes.tsx, ProtectedRoute, a layout per face
 src/components/ui/  shared shadcn/ui components

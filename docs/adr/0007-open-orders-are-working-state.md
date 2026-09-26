@@ -2,7 +2,8 @@
 
 **Status:** Accepted. Landed with the café model in v3 Phase 3 (`65fc141`); the device's side of it —
 order records in the outbox, drawn over the server's reads — in v3 Phase 4 (`5b44149`); table management
-and cancelling at the counter in `2e063e1`; the author on every order record after Phase 6.
+and cancelling at the counter in `2e063e1`; the author on every order record after Phase 6; amended for this
+repository, where the café's devices hear of a change by polling the server (`71cdd69`).
 
 ## Context
 
@@ -18,8 +19,9 @@ to be either. The question was where this state lives and how it meets the ledge
 **Two kinds of state, with different rules.** The ledger — `sales`, `sale_lines`, `stock_movements`,
 `receipt_voids` — is what happened to money and is never dropped. The room — `dining_tables`,
 `open_orders`, `open_order_items` (`20260911000010_cafe_schema.sql`) — is what is on the tables right now.
-Its rows are stamped as things happen and never deleted, but they are not documents: nothing about them is
-numbered, and a device may give up on a change to them.
+Orders and their items are stamped as things happen and never deleted, and a table is kept by the foreign
+keys once an order or a sale names it; but none of it is a document: nothing about them is numbered, and a
+device may give up on a change to them.
 
 **The server opens an order; nobody asks it to.** There is no "open order" record. `order_item_add` names
 the table, never an order: the server finds the table's open order or creates it, and the partial unique
@@ -62,8 +64,9 @@ stop a waiter's phone for ever.
 
 **Other devices re-read; nothing is patched.** `RealtimePort` tells a screen which kind of row changed —
 `dining_tables`, `open_orders`, `open_order_items` or `products` — and the screen marks the queries that
-cover it stale (`useRealtimeRefresh`). Supabase uses a Realtime channel on those four tables, the memory
-backend an in-process emitter, the REST adapter a poll of `GET /api/v1/open-orders?since=<cursor>`.
+cover it stale (`useRealtimeRefresh`). The memory backend uses an in-process emitter; the REST adapter polls
+`GET /api/v1/open-orders?since=<cursor>` every couple of seconds, and the server answers with the names
+stamped in `private.shop_changes` since that cursor (`api/migrations/sql/0002_changes.sql`).
 
 ### What was revised
 
@@ -86,6 +89,14 @@ the cancel — on every item it takes off, and `removed_after_sent` returns it a
 or a record in somebody else's name. An item taken off before the migration has no login recorded, and the
 report says nothing about it.
 
+**Other devices hear of a change by asking.** On Supabase a Realtime channel on the four tables pushed the
+name of what changed to every screen. This repository has no Supabase (ADR 0009), and the Symfony server
+holds no connections, so the café's devices ask it: triggers on the four tables stamp `private.shop_changes`,
+and a poll answers the names of what changed since the device's cursor — names, never rows, as before. The
+screens did not change: they still re-read what a name covers, so a missed or repeated poll costs a read and
+never a wrong screen. The migrations this record names by file are the parts of
+`api/migrations/sql/0001_schema.sql` marked `-- from` with those names.
+
 ## Consequences
 
 - The ledger holds money and only money. A thousand taps a day stay out of the receipt sequence, and the
@@ -105,8 +116,8 @@ report says nothing about it.
   names belongs to the shop, as it does for the person on a cash session, so a member who calls the RPCs
   directly can still name a colleague. What they cannot do is hide: the removal carries the login that sent
   it, and the report prints that login beside the colleague's name.
-- Order rows accumulate like the ledger. `private.reset_demo_shop` frees the demo café's tables every night;
-  a real café keeps its history.
+- Order rows accumulate like the ledger: nothing in this repository deletes them, and a café keeps its
+  history. The nightly reset that freed the Supabase demo's tables is not in this schema (ADR 0006).
 
 ## Alternatives rejected
 

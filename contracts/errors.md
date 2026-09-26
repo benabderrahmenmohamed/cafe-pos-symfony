@@ -1,6 +1,6 @@
 # Error contract
 
-Every failure that crosses a port is an error with one of the codes below. Clients decide what to do from the **code alone**, never from message text. The Supabase RPCs, the future Spring Boot service (`contracts/openapi.yaml`) and every adapter implement this table.
+Every failure that crosses a port is an error with one of the codes below. Clients decide what to do from the **code alone**, never from message text. The database functions in `api/migrations`, the Symfony server that carries them (`contracts/openapi.yaml`) and every adapter implement this table.
 
 ## Codes
 
@@ -33,19 +33,19 @@ Every failure that crosses a port is an error with one of the codes below. Clien
 
 **Discarding.** A record stopped in conflict returns to `pending` only after a person reviews it. Order kinds (`order_item_add`, `order_item_remove`, `order_send`, `order_item_prepare`, `order_cancel`) may also be discarded with a reason into the device's dead-letter list, which the admin sees: a stale item on a table the caisse already closed must not block a waiter's phone for ever. Ledger kinds (`sale`, `refund`, `session_open`, `session_close`) can never be discarded — one that reached the server must not be dropped, and one that did not has to be looked at.
 
-**A late add is not an error.** `order_item_add` for a table whose order was closed opens a new order with that item, so a waiter's offline event arriving after the caisse paid shows up as an unpaid item rather than being lost. Only `TABLE_INACTIVE` and `FORBIDDEN` refuse an add.
+**A late add is not an error.** `order_item_add` for a table whose order was closed opens a new order with that item, so a waiter's offline event arriving after the caisse paid shows up as an unpaid item rather than being lost. Because of its table, only `TABLE_INACTIVE` and `FORBIDDEN` refuse an add; `ORDER_CLOSED` never does.
 
 ## Wire formats
 
 **Keys.** RPC parameters and results, REST bodies and error `details` use snake_case keys (`payload_hash`, `terminal_code`, `lines[].unit_price_millimes`). The ports use camelCase; adapters rename keys at any depth with `src/lib/caseConversion.ts` and change nothing else. `payload_hash` is computed over the port record (see `src/lib/payloadHash.ts`) and sent unchanged, so the renaming never affects replays.
 
-**Supabase RPC.** The database raises with SQLSTATE `PTxyz`, which PostgREST turns into HTTP `xyz`. The body is `{ "code": "PT409", "message": "SEQUENCE_GAP", "details": "{\"expected_seq\": 42, \"received_seq\": 43}", "hint": "Expected receipt T1-42." }`: `message` is the code, `details` is the JSON object as text, `hint` is a sentence for people.
+**Database.** The functions in `api/migrations` raise with SQLSTATE `PTxyz`, where `xyz` is the HTTP status, through `private.raise_error` (the ledger's triggers raise the same shape themselves): the message is the code, the detail is the JSON object as text, and the hint is a sentence for people — SQLSTATE `PT409`, message `SEQUENCE_GAP`, detail `{"expected_seq": 42, "received_seq": 43}`, hint `Expected receipt T1-42.` The Symfony server reads those back (`api/src/Api/DatabaseErrors.php`) and answers HTTP `xyz` with the REST body below: the code, the hint as its `message`, the detail as its `details`. A row a policy refuses, or a missing grant (SQLSTATE `42501`), answers `FORBIDDEN`; anything else the database raises is `SERVER_ERROR`.
 
 **REST (`/api/v1`).** `{ "error": { "code": "SEQUENCE_GAP", "message": "Expected receipt T1-42.", "details": { "expected_seq": 42, "received_seq": 43 } } }`.
 
-**Responses without a contract code** (a proxy error page, a database constraint error that escaped) are classified by HTTP status: 401 `UNAUTHENTICATED`, 403 `FORBIDDEN`, 404 `NOT_FOUND`, 400/409/422 `VALIDATION_ERROR`, 429 `RATE_LIMITED`, 5xx `SERVER_ERROR`. A failed connection is `NETWORK_ERROR`.
+**Responses without a contract code** (a proxy error page, say) are classified by HTTP status: 401 `UNAUTHENTICATED`, 403 `FORBIDDEN`, 404 `NOT_FOUND`, 400/409/422 `VALIDATION_ERROR`, 429 `RATE_LIMITED`, 5xx `SERVER_ERROR`. A failed connection is `NETWORK_ERROR`.
 
-**Sign-in and token refresh** are the one exception to that classification: they answer 400 when they refuse credentials (a wrong password, an unconfirmed email, an expired refresh token), and that 400 is `UNAUTHENTICATED`, not `VALIDATION_ERROR`, so a bad password pauses a queue instead of stopping it at the record. A 400 that names a malformed request instead (auth-js `validation_failed`) stays `VALIDATION_ERROR`.
+**Signing in** follows that classification: `POST /api/v1/auth/token` answers a wrong password and an unknown e-mail alike, with 401 `UNAUTHENTICATED`, so a bad password pauses a queue instead of stopping it at the record, and a request without an e-mail or a password with 422 `VALIDATION_ERROR`. There is no token refresh: an expired token is answered 401 `UNAUTHENTICATED`, like a missing one.
 
 ## Record outcomes
 

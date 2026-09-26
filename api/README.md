@@ -3,7 +3,7 @@
 The café's backend, written against [`../contracts/openapi.yaml`](../contracts/openapi.yaml): the
 same 28 paths — 35 operations — the REST adapter of the app already calls, all of them served. The
 screens stay as they are — they are the part that keeps working with no network — and this server
-replaces Supabase behind them.
+took the place behind them that Supabase held when the café first ran.
 
 ## What it needs
 
@@ -24,6 +24,7 @@ installer and no Windows service:
 | Its data | `C:\Users\shini\pgdata` |
 | Address | `127.0.0.1:5433`, user `postgres`, password `postgres` |
 | Databases | `cafe` for development, `cafe_test` for the tests |
+| Key generation | XAMPP's OpenSSL needs its config named: `OPENSSL_CONF=C:/xampp/php/extras/openssl/openssl.cnf` before `lexik:jwt:generate-keypair` |
 
 Start and stop the database:
 
@@ -36,11 +37,16 @@ C:/Users/shini/pgsql/bin/pg_ctl.exe -D C:/Users/shini/pgdata stop
 
 ```bash
 composer install
-php bin/console doctrine:migrations:migrate   # the schema
-php bin/console app:seed-demo                 # the demo café, its members and its menu
-php bin/phpunit                               # the tests
-php -S 127.0.0.1:8000 -t public               # the server
+php bin/console lexik:jwt:generate-keypair                                  # the keys that sign the tokens
+php bin/console doctrine:database:create --connection=admin --if-not-exists # the database
+php bin/console doctrine:migrations:migrate                                 # the schema
+php bin/console app:seed-demo                                               # the demo café, its members and its menu
+php bin/console doctrine:database:create --connection=admin --if-not-exists --env=test  # the tests' own
+php bin/phpunit                                                             # the tests
+php -S 127.0.0.1:8000 -t public                                             # the server
 ```
+
+The tests fill their own database with the schema and the café themselves; they need it to exist.
 
 ## Two roles, on purpose
 
@@ -85,7 +91,8 @@ Two migrations are this server's own. `0002_changes.sql` is the one thing Supaba
 PHP server cannot — see below — and `0003_reads.sql` is a single grant, so that the sessions this
 server lists and the sessions its functions answer with are shaped by the same code.
 
-`DATABASE_URL` lives in `.env` for local work, and `.env.test` points at `cafe_test`, which the tests
+`DATABASE_URL` lives in `.env` for local work. In the test environment `config/packages/doctrine.yaml`
+adds `_test` to the database's name, so the tests run on `cafe_test`, which the tests
 are free to empty.
 
 Anywhere else, put it in `.env.local` rather than in the environment. Symfony reads its configuration
@@ -98,16 +105,18 @@ environment on purpose: a developer's local overrides must not change what the t
 
 ## Live screens, without a live connection
 
-Supabase pushed the names of the tables that changed down a websocket. This server holds no
-connections, so the app's REST client polls `GET /open-orders?since=<cursor>` every couple of seconds
-for the same four names — which is what `contracts/openapi.yaml` has always said that endpoint is.
+When the café ran on Supabase, its Realtime pushed the names of the tables that changed down a
+websocket. This server holds no connections, so the app's REST client polls
+`GET /api/v1/open-orders?since=<cursor>` every couple of seconds for the same four names — which is
+what `contracts/openapi.yaml` has always said that endpoint is.
 
 `private.shop_changes` is one row per café and topic, stamped by a trigger whenever a row of that
 topic changes, and the poll answers the names whose stamp is newer than the cursor. It carries no
-rows, exactly as the live version did: a screen that hears its topic reads again, so a missed poll or
-a repeated one costs a read and never a wrong screen. The stamp is `clock_timestamp()`, not `now()`,
-because two writes in one transaction must not share a moment, and the cursor is read before the
-changes, never after, so a change landing between the two is answered twice rather than never.
+rows, and the app took none from Supabase's pushes either: a screen that hears its topic reads again, so a missed
+poll or a repeated one costs a read and never a wrong screen. The stamp is `clock_timestamp()`, not
+`now()`, because two writes in one transaction must not share a moment, and the cursor is read
+before the changes, never after, so a change landing between the two is answered twice rather than
+never.
 
 ## Timestamps
 
@@ -131,7 +140,7 @@ the migrations - retrying while the database is still starting - and seeds the d
 
 A café that means it sets its own `APP_SECRET`, `DATABASE_URL`, `DATABASE_ADMIN_URL`, `JWT_PASSPHRASE` and
 `CORS_ALLOW_ORIGIN`, and mounts its own keys at `/var/www/html/config/jwt`: keys made inside the container
-live and die with it, so every restart would sign every device out and two replicas would reject each
+live and die with it, so every new container would sign every device out and two replicas would reject each
 other's tokens. `MIGRATE_ON_START=0` leaves the schema to whoever deploys it.
 
 ## How the app reaches it
@@ -141,17 +150,28 @@ VITE_BACKEND=rest VITE_API_BASE_URL=http://127.0.0.1:8000 npm run dev
 ```
 
 Nothing in the screens changes: the app reaches every backend through the same ports, and this one
-answers the REST contract.
+answers the REST contract. `rest` is the app's default backend and `.env.example` holds both lines,
+so with an `.env` copied from it, `npm run dev` alone does the same.
 
 ## What holds it to the contract
 
 `php bin/phpunit` is this server's own suite: the endpoints over HTTP, and the policies under them.
-It proves the server against the contract as this repo reads it. Two suites that already existed
-prove it against the app that has to use it, and neither was written for it — they are the ones the
-memory and Supabase backends pass, run unchanged:
+It proves the server against the contract as this repo reads it.
+
+The rules that matter most live in Postgres rather than in PHP — the append-only ledger, gapless
+receipt numbers, refunds bounded by what is left on a line, the order records, and the row-level
+security that keeps one café out of another's rows — and `tests/pgtap` tests them in SQL, with
+pgTAP and `pg_prove`, against the migrated and seeded café. They were written when the café ran on
+Supabase and came here with the schema; [`tests/pgtap/README.md`](tests/pgtap/README.md) says what
+they need and how to run them. They talk to Postgres alone, not to this server, and each file rolls
+back what it did, so they leave the database as they found it.
+
+Two suites that already existed prove it against the app that has to use it, and neither was written
+for it: the port contract suite, the same one the in-browser backend passes, and the three-device
+spec, written when the café ran on Supabase. Both run unchanged:
 
 ```bash
-# The port contract suite, 60 tests, against the server at API_BASE_URL.
+# From the repository root: the port contract suite, 61 tests, against the server at API_BASE_URL.
 CONTRACT_BACKEND=rest API_BASE_URL=http://127.0.0.1:8000 npx vitest run live.contract
 
 # The waiter's phone, the kitchen screen and the counter, in three browsers at once.
@@ -163,3 +183,5 @@ migrated and seeded. On Windows, PowerShell sets those variables with `$env:NAME
 
 They leave their tables, sessions and sales in the database, as a café does: every run takes a table
 and a terminal code of its own, so nothing has to be reset between them.
+
+CI runs all four, in the `symfony` job of `.github/workflows/ci.yml`.
